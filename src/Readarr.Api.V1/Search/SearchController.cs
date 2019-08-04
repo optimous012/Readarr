@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using NzbDrone.Core.MediaCover;
 using NzbDrone.Core.MetadataSource;
+using NzbDrone.Core.Organizer;
 using Readarr.Api.V1.Author;
 using Readarr.Api.V1.Books;
 using Readarr.Http;
@@ -14,10 +15,12 @@ namespace Readarr.Api.V1.Search
     public class SearchController : Controller
     {
         private readonly ISearchForNewEntity _searchProxy;
+        private readonly IBuildFileNames _fileNameBuilder;
 
-        public SearchController(ISearchForNewEntity searchProxy)
+        public SearchController(ISearchForNewEntity searchProxy, IBuildFileNames fileNameBuilder)
         {
             _searchProxy = searchProxy;
+            _fileNameBuilder = fileNameBuilder;
         }
 
         [HttpGet]
@@ -27,7 +30,7 @@ namespace Readarr.Api.V1.Search
             return MapToResource(searchResults).ToList();
         }
 
-        private static IEnumerable<SearchResource> MapToResource(IEnumerable<object> results)
+        private IEnumerable<SearchResource> MapToResource(IEnumerable<object> results)
         {
             var id = 1;
             foreach (var result in results)
@@ -35,9 +38,8 @@ namespace Readarr.Api.V1.Search
                 var resource = new SearchResource();
                 resource.Id = id++;
 
-                if (result is NzbDrone.Core.Books.Author)
+                if (result is NzbDrone.Core.Books.Author author)
                 {
-                    var author = (NzbDrone.Core.Books.Author)result;
                     resource.Author = author.ToResource();
                     resource.ForeignId = author.ForeignAuthorId;
 
@@ -47,9 +49,8 @@ namespace Readarr.Api.V1.Search
                         resource.Author.RemotePoster = poster.Url;
                     }
                 }
-                else if (result is NzbDrone.Core.Books.Book)
+                else if (result is NzbDrone.Core.Books.Book book)
                 {
-                    var book = (NzbDrone.Core.Books.Book)result;
                     resource.Book = book.ToResource();
                     resource.Book.Overview = book.Editions.Value.Single(x => x.Monitored).Overview;
                     resource.Book.Author = book.Author.Value.ToResource();
@@ -61,6 +62,8 @@ namespace Readarr.Api.V1.Search
                     {
                         resource.Book.RemoteCover = cover.Url;
                     }
+
+                    resource.Book.Author.Folder = _fileNameBuilder.GetAuthorFolder(book.Author);
                 }
                 else
                 {

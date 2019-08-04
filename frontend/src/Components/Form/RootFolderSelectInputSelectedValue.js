@@ -9,19 +9,32 @@ function RootFolderSelectInputSelectedValue(props) {
     name,
     value,
     freeSpace,
+    authorFolder,
     includeFreeSpace,
+    isWindows,
     ...otherProps
   } = props;
 
-  const text = value === '' ? name : `${name} [${value}]`;
+  const slashCharacter = isWindows ? '\\' : '/';
 
   return (
     <EnhancedSelectInputSelectedValue
       className={styles.selectedValue}
       {...otherProps}
     >
-      <div className={styles.path}>
-        {text}
+      <div className={styles.pathContainer}>
+        <div className={styles.path}>
+          {value}
+        </div>
+
+        {
+          authorFolder ?
+            <div className={styles.authorFolder}>
+              {slashCharacter}
+              {authorFolder}
+            </div> :
+            null
+        }
       </div>
 
       {
@@ -38,6 +51,8 @@ RootFolderSelectInputSelectedValue.propTypes = {
   name: PropTypes.string,
   value: PropTypes.string,
   freeSpace: PropTypes.number,
+  authorFolder: PropTypes.string,
+  isWindows: PropTypes.bool,
   includeFreeSpace: PropTypes.bool.isRequired
 };
 
