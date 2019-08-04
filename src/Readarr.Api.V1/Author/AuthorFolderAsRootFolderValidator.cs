@@ -41,7 +41,8 @@ namespace Readarr.Api.V1.Author
                 return false;
             }
 
-            return authorFolder.LevenshteinDistance(rootFolder) <= Math.Max(1, authorFolder.Length * 0.2);
+            var distance = authorFolder.LevenshteinDistance(rootFolder);
+            return distance >= Math.Max(1, authorFolder.Length * 0.2);
         }
     }
 }
